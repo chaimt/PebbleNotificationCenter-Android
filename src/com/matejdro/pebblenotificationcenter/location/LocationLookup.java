@@ -32,8 +32,7 @@ public class LocationLookup {
   }
 
   public void lookup() {
-    boolean backlight =
-        settings.getInt(PebbleNotificationCenter.LIGHT_SCREEN_ON_NOTIFICATIONS, 1)==3;
+    boolean backlight = settings.getString(PebbleNotificationCenter.LIGHT_SCREEN_ON_NOTIFICATIONS, "2").equals("3");
     // will lookup time once a hour
     if (backlight && TimeUtil.hasTimePassed(gotLastLocation, 60 * 60 * 1000)) {
       // Acquire a reference to the system Location Manager

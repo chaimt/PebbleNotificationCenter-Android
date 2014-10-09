@@ -1,86 +1,106 @@
 package com.matejdro.pebblenotificationcenter.util;
 
-import java.util.HashMap;
-
 import com.matejdro.pebblenotificationcenter.PebbleNotificationCenter;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public class TextUtil {	
-	public static String prepareString(String text)
-	{
-		return prepareString(text, 20);
-	}
+public class TextUtil
+{
+    public static String prepareString(String text)
+    {
+        return prepareString(text, 20);
+    }
 
-	public static String prepareString(String text, int length)
-	{
-		text = fixInternationalAndTrim(text, length);
-        
-        if (RTLUtility.getInstance().isRTL(text)){            
-            text = RTLUtility.getInstance().format(text, 15);        	
+    public static String prepareString(String text, int length)
+    {
+        if(text == null)
+            return text;
+
+        text = trimString(text, length, true);
+        text = fixInternationalCharacters(text);
+
+        if (RTLUtility.getInstance().isRTL(text))
+        {
+            text = RTLUtility.getInstance().format(text, 15);
         }
-        
-		return trimString(text, length, true);
-	}
+
+        return trimString(text, length, true);
+    }
 
 
-	public static String fixInternationalAndTrim(String text, int length)
-	{
-		StringBuilder builder = new StringBuilder(length);
+    public static String fixInternationalCharacters(String input)
+    {
+        if(input == null)
+            return input;
 
-		length = Math.min(length, text.length());
+        HashMap<String, String> replacementTable = PebbleNotificationCenter.getInMemorySettings().getReplacingStrings();
+        for (Map.Entry<String, String> e : replacementTable.entrySet())
+        {
+            input = input.replace(e.getKey(), e.getValue());
+        }
 
-		HashMap<Character, String> replacementTable = PebbleNotificationCenter.getInMemorySettings().getReplacingStrings();
+        return input;
+    }
 
-		for (int i = 0; i < length; i++)
-		{
-			char ch = text.charAt(i);
+    public static String trimString(String text)
+    {
+        return trimString(text, 20, true);
+    }
 
-			String replacement = replacementTable.get(ch);
-			if (replacement != null)
-			{
-				builder.append(replacement);
-			}
-			else
-			{
-				builder.append(ch);
-			}
-		}
+    public static String trimString(String text, int length, boolean trailingElipsis)
+    {
+        if (text == null)
+            return null;
 
-		return builder.toString();		
-	}
+        int targetLength = length;
+        if (trailingElipsis)
+        {
+            targetLength -= 3;
+        }
 
-	public static String trimString(String text)
-	{
-		return trimString(text, 20, true);
-	}
+        if (text.getBytes().length > length)
+        {
+            if (text.length() > targetLength)
+                text = text.substring(0, targetLength);
 
-	public static String trimString(String text, int length, boolean trailingElipsis)
-	{
-		if (text == null)
-			return null;
+            while (text.getBytes().length > targetLength)
+            {
+                text = text.substring(0, text.length() - 1);
+            }
 
-		int targetLength = length;
-		if (trailingElipsis)
-		{
-			targetLength -= 3;
-		}
+            if (trailingElipsis)
+                text = text + "...";
 
-		if (text.getBytes().length > length)
-		{
-			if (text.length() > targetLength)
-				text = text.substring(0, targetLength);
+        }
 
-			while (text.getBytes().length > targetLength)
-			{
-				text = text.substring(0, text.length() - 1);
-			}
+        return text;
+    }
 
-			if (trailingElipsis)
-				text = text + "...";
+    public static String trimStringFromBack(String text, int length)
+    {
+        if (text == null)
+            return null;
 
-		}
+        while (text.getBytes().length > length)
+        {
+            text = text.substring(1);
+        }
 
-		return text;
+        return text;
+    }
 
-	}
+
+    public static boolean isInteger(String text)
+    {
+        try
+        {
+            Integer.parseInt(text);
+            return true;
+        }
+        catch (NumberFormatException e)
+        {
+            return false;
+        }
+    }
 }

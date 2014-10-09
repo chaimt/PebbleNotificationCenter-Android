@@ -46,16 +46,6 @@
         <item>Excluding mode</item>
         <item>Including mode</item>
     </string-array>
-    <string-array name="fontSizeText">
-        <item>Small</item>
-        <item>Medium</item>
-        <item>Large</item>
-    </string-array>
-    <string-array name="vibrationModes">
-        <item>Disabled</item>
-        <item>Vibrate longer on first notification, shorter on all others</item>
-        <item>Allways vibrate shorter</item>
-    </string-array>
     <string-array name="vibrationModeValues">
         <item>0</item>
         <item>1</item>
@@ -72,9 +62,9 @@
         <item>2</item>
     </string-array>
 	<string-array name="lightNotifications">
-	    <item>Nothing</item>
-	    <item>Light screen on notification</item>
-	    <item>Sunset Light screen on notification</item>
+	    <item>Never</item>
+	    <item>Always</item>
+	    <item>After sunset</item>
 	</string-array>
 	<string-array name="lightNotificationValues">
 	    <item>1</item>
@@ -125,6 +115,11 @@
         <item>Send notification</item>
         <item>Change setting</item>
     </string-array>
+    <string-array name="pebble_app_options">
+        <item>NC Notification</item>
+        <item>Pebble Notification</item>
+        <item>No Notification</item>
+    </string-array>
 
     <string name="title_activity_tasker_setup">TaskerSetupActivity</string>
     <string name="action_settings">Settings</string>
@@ -144,6 +139,38 @@
         <item>Include</item>
     </string-array>
 
+    <string-array name="settingSelectButtonAction">
+        <item>Nothing</item>
+        <item>Dismiss notification</item>
+        <item>Open actions menu</item>
+        <item>Action menu item 1</item>
+        <item>Action menu item 2</item>
+        <item>Action menu item 3</item>
+        <item>Action menu item 4</item>
+        <item>Action menu item 5</item>
+        <item>Action menu item 6</item>
+        <item>Action menu item 7</item>
+        <item>Action menu item 8</item>
+        <item>Action menu item 9</item>
+        <item>Action menu item 10</item>
+        <item>Action menu item 11</item>
+        <item>Action menu item 12</item>
+        <item>Action menu item 13</item>
+        <item>Action menu item 14</item>
+        <item>Action menu item 15</item>
+        <item>Action menu item 16</item>
+        <item>Action menu item 17</item>
+        <item>Action menu item 18</item>
+        <item>Action menu item 19</item>
+        <item>Action menu item 20</item>
+    </string-array>
+
+    <string-array name="settingActionVisibility">
+        <item>Disable</item>
+        <item>Above app actions</item>
+        <item>Below app actions</item>
+    </string-array>
+
     <string name="replacementListTitle">Regex Filters:</string>
     <string name="replacementListDescription">Global filter by keywords/regular expressions for notifications that should be included/excluded from displaying.</string>
     <string name="replacement_description">In this window you can define replacement pairs. Notification Center will swap specified characters with specified text. Use that to remove or translate characters that Pebble does not display to readable text.</string>
@@ -151,5 +178,214 @@
     <string name="replacement">Replacement:</string>
     <string name="enterChracter">You need to enter one character or unicode code for it!</string>
     <string name="importNoFiles">No dictionary files found.\n\nPlace your replacement dictionary .txt files into NotificationCenter folder on your phone\'s storage and try again.</string>
+    <string name="pebbleAppsDescription">In this view you can disable Notification Center when specific app is open on Pebble. It is useful to prevent NC from interrupting apps like sleep tracking or stopwatch. You can also switch to native Pebble notifications which means many NC features won\'t work, but it also won\'t close currently running app. For this feature to work, you need to enable Developer Connection Pebble app settings.</string>
+    <string name="pebbleAppLoadingError">Error while loading app list. Is your Pebble connected and Developer Connection
+        enabled?
+    </string>
+    <string name="clearHistory">Clear History</string>
+    <string name="deleteHistoryConfirm">Do you really want to clear whole notification history?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="historyCleared">History cleared</string>
+    <string name="openingPebbleAppFailed">Opening Pebble app failed. Do you have Pebble app installed?</string>
+    <string name="pebbleAppInstallDialog">Do you want to open Pebble App Store to install Notification Center to your
+        Pebble?
+    </string>
+    <string name="openInPebbleAppStore">Open NC in Pebble App Store</string>
+    <string name="PebbleAppsOther">Unknown</string>
+    <string name="PebbleAppMainMenu">Main Menu</string>
+    <string name="PebbleAppSettings">Settings</string>
+    <string name="PebbleAppMusic">Music</string>
+    <string name="PebbleAppNotificationHistory">Notifications (native)</string>
+    <string name="PebbleAppAlarms">Alarms</string>
+    <string name="PebbleAppWatchfaceList">Watchfaces (list)</string>
+    <string name="PebbleWatchfaceSimplicity">Simplicity watchface</string>
+    <string name="PebbleWatchfaceAnalog">Classic analog watchface</string>
+    <string name="PebbleWatchfaceText">Text watchface</string>
+    <string name="settingUseDefaultSettings">Use default settings for that app</string>
+    <string name="settingUseDefaultSettingsDescription">If checked, bottom settings won\'t be in effect and this app will use default settings</string>
+    <string name="settingSendOngoing">Send ongoing notifications</string>
+    <string name="settingSendOngoingDescription">Send notifications that are not just one time event, but something
+        ongoing (for example ongoing file download or app instalation)
+    </string>
+    <string name="settingSendBlankNotifications">Send blank notifications</string>
+    <string name="settingSendBlankNotificationsDescription">When checked, NC will also send completely blank
+        notifications from this app
+    </string>
+    <string name="settingSwitchToRecent">Switch to most recent notification</string>
+    <string name="settingSwitchToRecentDescription">When this is checked and new notification comes from this app, it
+        will switch to that notification instead of queuing it.
+    </string>
+    <string name="settingIgnoreQuietHours">Ignore quiet hours</string>
+    <string name="settingIgnoreQuietHoursDescription">When this is checked, notifications from this app will show up on
+        your Pebble regardless of the time.
+    </string>
+    <string name="settingDismissUpwards">Dismiss Upwards</string>
+    <string name="settingDismissUpwardsDescripition">When checked and you dismiss notification on the phone, it will
+        also disappear on the Pebble. Only works on Android 4.3 and newer.
+    </string>
+    <string name="settingsCategoryInboxParsing">Inbox Parsing</string>
+    <string name="settingAlternateInboxParser">Use alternate inbox parser</string>
+    <string name="settingAlternateInboxParserDescription">If app does not support Android Wear notifications, this is next best thing. It tries to improve formatting of
+        inbox notifications (for example Gmail notification with multiple messages). It enables below options and generates
+        notifications with a bit less clutter. It is recommended to keep this enabled unless notification looks weird on
+        Pebble or is missing information. Android 4.1 or newer required.
+    </string>
+    <string name="settingReverseInbox">Reverse inbox</string>
+    <string name="settingReverseInboxDescription">Check this if app does not follow standards and displays new messages
+        at the bottom instead of at the top.
+    </string>
+    <string name="settingDisplayFirstOnly">Display newest message only</string>
+    <string name="settingDisplayFirstOnlyDescription">Instead of displaying all the messages from the notification,
+        display first one only.
+    </string>
+    <string name="settingsCategoryRegularExpressions">Regular expressions</string>
+    <string name="settingsCategoryVibration">Vibration</string>
+    <string name="settingVibrationPattern">Vibration pattern</string>
+    <string name="settingVibrationPatternDescription">Here you can define vibration pattern for this app. Pattern is in
+        format \'vibrateTime, pauseTime, vibrateTime, pauseTime ...\', where times are in miliseconds. For example
+        \'100, 200, 300\' will vibrate for 100ms, then wait 200 ms and then again vibrate for 300ms. Limit is 20 total numbers (so 10 vibrations and 10 pauses). Maximum total duration is 10 seconds. If you want to disable vibration, just enter 0.
+    </string>
+    <string name="settingPeriodicVibration">Periodic Vibration</string>
+    <string name="settingPeriodicVibrationDescription">After initial vibration, Pebble will also vibrate every few
+        seconds to remind you notification is there in case you did not felt it first time or you were busy. Here you
+        can set interval of that vibration. You can also set it to 0 to disable the feature.
+    </string>
+    <string name="settingIncludingRegex">Including Regex</string>
+    <string name="settingIncludingRegexDescription">Here you can define list of regular expressions that notification
+        needs to contain in order for it to display on Pebble. If this list is empty, this setting is simply ignored. That option is very powerful so it
+        is recommended that you google and learn about regular expressions first. But for basics, you can just enter any
+        word here (case sensitive!) and it should match notification. For example if you enter \'Pebble\' (without
+        quotes), it will only match notifications that contain \'Pebble\'.
+    </string>
+    <string name="regexListEmpty">No expressions</string>
+    <string name="settingExcludingRegex">Excluding Regex</string>
+    <string name="settingExcludingRegexDescription">Same as above, except that here all messages that contain specified
+        expressions will NOT be sent to Pebble.
+    </string>
+    <string name="settingAppSelected">App Selected</string>
+    <string name="settingAppSelectedDescription">This setting is equal to checking app on the app list</string>
+    <string name="invalidVibrationPattern">Invalid vibration pattern!</string>
+    <string name="ok">OK</string>
+    <string name="invalidRegexPattern">Invalid regular expression!</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="regexEditingDialogTItle">Editing Filter</string>
+    <string name="regexAddDialogText">Enter keyword/regex for this filter</string>
+    <string name="regexAddDialogTitle">Add Filter</string>
+    <string name="virtualAppDefaultSettings">Default Settings</string>
+    <string name="virtualAppThirdParty">3rd party notifications</string>
+    <string name="virtualAppTaskerReceiver">Tasker notifications</string>
+    <string name="backupDialogText">Making new backup will delete any previously made backups. Do you want to proceed?
+    </string>
+    <string name="backupDialogTitle">Config Backup</string>
+    <string name="backupConfigMenuOption">Backup Config</string>
+    <string name="restoreConfigMenuOption">Restore Config</string>
+    <string name="restoreConfigDialogTitle">Restore Config</string>
+    <string name="restoreConfigDialogText">This action will replace whole Notification Center config with a backuped
+        one. Do you want to proceed?
+    </string>
+    <string name="backupCompleted">Backup completed</string>
+    <string name="configRestoreOK">Restore completed</string>
+    <string name="configRestoreError">Error while restoring! Did you even make backup?</string>
+    <string name="settingInboxUseSubtext">Use sub text for notification subtitle</string>
+    <string name="settingInboxUseSubtextDescription">Use text below message list for notification subtitle instead of
+        actual notification title. Works better for standard-compilant apps (for example Gmail shows mail address
+        instead of \'X new messages\').
+    </string>
+    <string name="taskerPickYourAction">Pick your action:</string>
+    <string name="taskerActionNotification">Send Notification</string>
+    <string name="taskerActionGlobalSetting">Edit Global Setting</string>
+    <string name="taskerActionAppSetting">Edit App Setting</string>
+    <string name="taskerDescriptionNotification">Notification - %s</string>
+    <string name="taskerDescriptionGlobalSetting">Change global settings</string>
+    <string name="taskerDescriptionPerAppSetting">Change app settings - %s</string>
+    <string name="settingSaveToHistory">Save to history</string>
+    <string name="settingSaveToHistoryDescription">Save notifications from this app to notification history</string>
+    <string name="appListDescription">In this view you can enable/disable apps and edit settings for specific app (click
+        on the app name to change its settings). Default settings are global settings and apply to every app unless you set different options on specific app and override defaults that way.
+    </string>
+    <string name="settingCategoryActions">Actions</string>
+    <string name="settingLoadWearActions">Load Android Wear actions</string>
+    <string name="settingLoadWearActionsDescription">Load actions meant for Android Wear (actions that appear when you swipe left on Wear). This includes reply and regular actions.
+    </string>
+    <string name="settingCannedResponses">Canned responses</string>
+    <string name="settingCannedResponsesDescription">Here you can define list of canned responses that you can reply
+        with if app has Android Wear voice reply support.
+    </string>
+    <string name="cannedResponsesNoResponses">No responses</string>
+    <string name="addCannedResponse">Add canned response</string>
+    <string name="editCannedResponse">Edit canned response</string>
+    <string name="voiceErrorNoInternet">No internet connection.</string>
+    <string name="voiceErrorNoSpeech">No speech detected.</string>
+    <string name="voiceErrorUnknown">Unknown error.</string>
+    <string name="voiceInputNotificationTitle">Voice input</string>
+    <string name="voiceInputSpeakInstructions">Speak after the beep</string>
+    <string name="voiceInputResultTitle">Result %d:\n</string>
+    <string name="voiceInputResultNotificationSubtitle">Results</string>
+    <string name="voiceInputResultNotificationText">%s\n\nPick correct text from menu or retry.
+    </string>
+    <string name="voiceInputResultActionName">Result %d</string>
+    <string name="settingEnableVoiceReply">Enable voice reply</string>
+
+    <string name="settingEnableVoiceReplyDescription">When this setting is enabled, you can dictate reply on android
+        wear actions. Of course Pebble does not have microphone, but you can use your phone\'s mic (sometimes it even
+        hears from your pocket) or mic on your headphones.
+    </string>
+    <string name="settingUseWearGroupNotifications">Use Wear group notifications</string>
+    <string name="settingUseWearGroupNotificationsDescription">Instead of inbox notifications, display group
+        notifications for Android Wear. This will display full individual messages instead of just displaying summary of
+        your inbox when you receive multiple messages. Requires at least Android 4.1 or newer and app needs to implement Android
+        Wear notifications for it to work.
+    </string>
+    <string name="taskerNoTasksError">No tasks. Is tasker installed?</string>
+    <string name="settingTaskerActions">Tasker actions</string>
+    <string name="settingTaskerActionsDescription">Here you can add tasker tasks that will be added to that app\'s
+        actions. When you select that task on the Pebble, tasker task will be executed. You need to enable external
+        access in tasker to use this option.
+    </string>
+    <string name="taskerActionsNoTasks">No tasks</string>
+    <string name="removeTaskConfirmation">Do you want to remove task %s from actions?</string>
+    <string name="voiceInputErrorNotificationText">%s\n\n
+
+        Use retry from actions menu to retry voice input.
+    </string>
+    <string name="taskerVariablesDescription" formatted="false">
+    You can use those variables in task that is triggered by NC:\n\n
+    %ncappname = name of the app that sent notification\n\n
+    %ncappppkg = package of the app that sent notification\n\n
+    %ncid = ID of the notification\n\n
+    %nctag = Tag of the notification\n\n
+    %nctitle = Title of the notification\n\n
+    %ncsubtitle = Subtitle of the notification\n\n
+    %nctext = Text of the notification
+    </string>
+    <string name="voiceInputErrorNotificationSubtitle">Error</string>
+    <string name="taskerActionsVariablesButton">Variables</string>
+    <string name="taskerActionErrorNotificationTitle">Tasker Action</string>
+    <string name="taskerActionErrorNotificationSubtitle">Error</string>
+    <string name="taskerActionErrorNoExternalAccess">Tasker\'s External Access is turned off.</string>
+    <string name="taskerActionErrorNotInstalled">Tasker is not installed</string>
+    <string name="taskerActionErrorUnknown">Unknown error.</string>
+    <string name="openOnPhone">Open on phone</string>
+    <string name="settingSelectPress">SELECT press action</string>
+    <string name="settingSelectPressDescription">
+        What happens when you press SELECT button on Pebble. Menu actions are equal to pressing corresponding action in action menu. For example if you pick \&quot;Action menu item 3\&quot; then pressing SELECT button would be equal to opening action menu and selecting 3rd action.</string>
+    <string name="settingSelectHold">SELECT hold action</string>
+    <string name="settingSelectHoldDescription">Same as above except that this actions is executed when you hold SELECT
+        button.
+    </string>
+    <string name="settingDismissOnPhone">Dismiss on phone action position</string>
+    <string name="dismissOnPebblePosition">Dismiss on Pebble action position</string>
+    <string name="settingOpenOnPhonePosition">Open on phone action position</string>
+    <string name="dismissOnPebble">Dismiss - Pebble</string>
+    <string name="dismissOnPhone">Dismiss - Phone</string>
+    <string name="settingLoadPhoneActions">Load phone notification actions</string>
+    <string name="settingLoadPhoneActionsDescription">Load notification actions that appear on the phone\'s
+        notifications (buttons below notification text).
+    </string>
+    <string name="wearPageAction">Wear page %d</string>
+    <string name="errorNoTasker">You need to install tasker to use this action.</string>
 
 </resources>

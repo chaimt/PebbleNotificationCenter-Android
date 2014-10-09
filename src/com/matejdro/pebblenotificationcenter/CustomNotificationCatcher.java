@@ -1,21 +1,20 @@
 package com.matejdro.pebblenotificationcenter;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import com.matejdro.pebblenotificationcenter.appsetting.AppSetting;
+import com.matejdro.pebblenotificationcenter.appsetting.DefaultAppSettingsStorage;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class CustomNotificationCatcher extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
-		if (settings.getBoolean("enableCustom", true))
+        DefaultAppSettingsStorage storage = PebbleNotificationCenter.getInMemorySettings().getDefaultSettingsStorage();
+        if (storage.canAppSendNotifications(AppSetting.VIRTUAL_APP_THIRD_PARTY))
 		{
 			String notificationData = intent.getStringExtra("notificationData");
 			if (notificationData == null)
@@ -27,34 +26,21 @@ public class CustomNotificationCatcher extends BroadcastReceiver {
 				
 				String title = data.getString("title");
 				String text = data.getString("body");
-				
-				if (data.has("subtitle"))
-				{
-					String subtitle = data.getString("subtitle");
-					
-					if (text.endsWith("NOHISTORY"))
-					{
-						text = text.substring(0, text.length() - 9);
-						PebbleTalkerService.notify(context, title, subtitle, text, true, false);
-					}
-					else
-					{
-						PebbleTalkerService.notify(context, title, subtitle, text);
-					}
-				}
-				else
-				{
-					if (text.endsWith("NOHISTORY"))
-					{
-						text = text.substring(0, text.length() - 9);
-						PebbleTalkerService.notify(context, title, text, true);
-					}
-					else
-					{
-						PebbleTalkerService.notify(context, title, text);
-					}
-				}
-				
+                boolean noHistory = false;
+                if (text.endsWith("NOHISTORY"))
+                {
+                    text = text.substring(0, text.length() - 9);
+                    noHistory = true;
+                }
+
+                PebbleNotification notification = new PebbleNotification(title, text, AppSetting.VIRTUAL_APP_THIRD_PARTY);
+                notification.setNoHistory(noHistory);
+                if (data.has("subtitle"))
+                    notification.setSubtitle(data.getString("subtitle"));
+
+                Intent startIntent = new Intent(context, PebbleTalkerService.class);
+                startIntent.putExtra("notification", notification);
+                context.startService(startIntent);
 			}
 			catch (JSONException e)
 			{

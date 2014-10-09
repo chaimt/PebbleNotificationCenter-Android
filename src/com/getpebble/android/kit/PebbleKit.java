@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import com.getpebble.android.kit.util.PebbleDictionary;
 import org.json.JSONException;
+import timber.log.Timber;
 
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ public final class PebbleKit {
 
     private static final int NAME_MAX_LENGTH = 32;
     private static final int ICON_MAX_DIMENSIONS = 32;
+    private static final String WATCH_CONNECTION_STATUS_URI = "content://com.getpebble.android.provider/state";
 
     private PebbleKit() {
 
@@ -84,13 +86,18 @@ public final class PebbleKit {
      * @return true if an active connection to the watch currently exists, otherwise false. This method will also return
      *         false if the Pebble application is not installed on the user's handset.
      */
-    public static boolean isWatchConnected(final Context context) {
-        Cursor c = context.getContentResolver().query(Uri.parse("content://com.getpebble.android.provider/state"),
-                null, null, null, null);
-        if (c == null || !c.moveToNext()) {
+    public static boolean isWatchConnected(Context context) {
+        Cursor cursor = context.getContentResolver().query(Uri.parse(WATCH_CONNECTION_STATUS_URI), null, null, null, null);
+        if (cursor == null) {
             return false;
+        } else if (!cursor.moveToNext()) {
+            cursor.close();
+            return false;
+        } else {
+            boolean isConnected = cursor.getInt(0) == 1;
+            cursor.close();
+            return isConnected;
         }
-        return c.getInt(0) == 1;
     }
 
     /**
@@ -162,6 +169,7 @@ public final class PebbleKit {
         final Intent stopAppIntent = new Intent(INTENT_APP_STOP);
         stopAppIntent.putExtra(APP_UUID, watchappUuid);
         context.sendBroadcast(stopAppIntent);
+        Timber.d("Sent close app command !!");
     }
 
     /**
@@ -212,7 +220,7 @@ public final class PebbleKit {
      *         Thrown in the specified PebbleDictionary or UUID is invalid.
      */
     public static void sendDataToPebbleWithTransactionId(final Context context, final UUID watchappUuid,
-                                            final PebbleDictionary data, final int transactionId)
+                                                         final PebbleDictionary data, final int transactionId)
             throws IllegalArgumentException {
 
         if (watchappUuid == null) {

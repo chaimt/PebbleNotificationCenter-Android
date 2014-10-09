@@ -1,21 +1,20 @@
 package com.matejdro.pebblenotificationcenter.ui;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import timber.log.Timber;
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,22 +24,29 @@ import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import com.matejdro.pebblenotificationcenter.PebbleNotificationCenter;
 import com.matejdro.pebblenotificationcenter.R;
-import com.matejdro.pebblenotificationcenter.util.ListSerialization;
+import com.matejdro.pebblenotificationcenter.appsetting.AppSetting;
+import com.matejdro.pebblenotificationcenter.appsetting.DefaultAppSettingsStorage;
+import com.matejdro.pebblenotificationcenter.ui.perapp.PerAppActivity;
+import com.matejdro.pebblenotificationcenter.util.PreferencesUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class AppListFragment extends Fragment {
 
 	private static SharedPreferences preferences;
 	private static SharedPreferences.Editor editor;
+    private DefaultAppSettingsStorage settingsStorage;
+    private SharedPreferences.OnSharedPreferenceChangeListener changeListener;
 
 	private ListView listView;
 	private AppListAdapter listViewAdapter;
 
-	private Set<String> checkedApps;
 	private List<AppInfoStorage> apps;
-
+	private LruCache<String, Bitmap> iconCache;
 	private boolean showOnResume = false;
 
 	public static AppListFragment newInstance(boolean showSystemApps) {
@@ -66,17 +72,45 @@ public class AppListFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-		checkedApps = Collections.synchronizedSet(new HashSet<String>());
 		apps = Collections.synchronizedList(new ArrayList<AppInfoStorage>());
 
 		preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 		editor = preferences.edit();
+		settingsStorage = new DefaultAppSettingsStorage(preferences, editor);
 
+        changeListener = new SharedPreferences.OnSharedPreferenceChangeListener()
+        {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences preferences, String s)
+            {
+                if (listViewAdapter != null)
+                    listViewAdapter.notifyDataSetChanged();
+            }
+        };
+
+        preferences.registerOnSharedPreferenceChangeListener(changeListener);
+
+		final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
+		iconCache = new LruCache<String, Bitmap>(maxMemory / 16) // 1/16th of device's RAM should be far enough for all icons
+		{
+
+			@Override
+			protected int sizeOf(String key, Bitmap value) {
+				return value.getByteCount() / 1024;
+			} 
+			
+		};
 		new AppLoadingTask().execute();
 
 		return inflater.inflate(R.layout.fragment_app_list, null);
 	}
+
+    @Override
+    public void onDestroy()
+    {
+        preferences.unregisterOnSharedPreferenceChangeListener(changeListener);
+        super.onDestroy();
+    }
 
 	@Override
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -96,15 +130,22 @@ public class AppListFragment extends Fragment {
 		view.setVisibility(View.GONE);
 
 		listView = (ListView) getView().findViewById(R.id.appList);
-		listViewAdapter = new AppListAdapter();
+
+        TextView header = new TextView(getActivity());
+        header.setText(getString(R.string.appListDescription));
+        int padding = (int)((10 * getResources().getDisplayMetrics().density) + 0.5);
+        header.setPadding(padding, padding, padding, padding);
+        listView.addHeaderView(header);
+
+        listViewAdapter = new AppListAdapter();
 		listView.setAdapter(listViewAdapter);
 		listView.setVisibility(View.VISIBLE);
+		listView.setScrollingCacheEnabled(true);
 	}
 
 
 	private class AppListAdapter extends BaseAdapter
 	{
-
 		@Override
 		public int getCount() {
 			return apps.size();
@@ -143,34 +184,37 @@ public class AppListFragment extends Fragment {
 
 			final AppInfoStorage appInfo = apps.get(position);
 
+			holder.lastIndex = position;
 			holder.name.setText(appInfo.label);
-			holder.icon.setImageDrawable(appInfo.icon);
+			
+			Bitmap icon = iconCache.get(appInfo.packageName);
+			if (icon == null)
+			{
+				new IconLoadingTask().execute(appInfo.packageName, holder, position);
+				holder.icon.setImageDrawable(null);
+			}
+			else
+				holder.icon.setImageBitmap(icon);
 
 			convertView.setOnClickListener(new View.OnClickListener() {
 				@Override
 				public void onClick(View v) {
-					holder.check.toggle();
+				    Intent activityIntent = new Intent(getActivity(), PerAppActivity.class);
+                    activityIntent.putExtra("appName", appInfo.label);
+                    activityIntent.putExtra("appPackage", appInfo.packageName);
+                    startActivity(activityIntent);
 				}
 			});
 
-			holder.check.setOnCheckedChangeListener(null);
+            holder.check.setVisibility(appInfo.packageName.equals(AppSetting.VIRTUAL_APP_DEFAULT_SETTINGS) ? View.GONE : View.VISIBLE);
 
-			holder.check.setChecked(checkedApps.contains(appInfo.info.packageName));
-
+            holder.check.setOnCheckedChangeListener(null);
+			holder.check.setChecked(settingsStorage.isAppChecked(appInfo.packageName));
 			holder.check.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					if (isChecked) {
-						checkedApps.add(appInfo.info.packageName);
-						Timber.d("Added application %s to checkedApps, checkedApps.size() = %d", appInfo.info.packageName, checkedApps.size());
-					}
-					else
-					{
-						checkedApps.remove(appInfo.info.packageName);
-						Timber.d("Removed application %s from checkedApps, checkedApps.size() = %d", appInfo.info.packageName, checkedApps.size());
-					}
-					ListSerialization.saveCollection(editor, checkedApps, PebbleNotificationCenter.SELECTED_PACKAGES);
+					settingsStorage.setAppChecked(appInfo.packageName, isChecked);
 					PebbleNotificationCenter.getInMemorySettings().markDirty();
 				}
 			});
@@ -192,27 +236,48 @@ public class AppListFragment extends Fragment {
 
 		@Override
 		protected Void doInBackground(Void... params) {
-			ListSerialization.loadCollection(preferences, checkedApps, PebbleNotificationCenter.SELECTED_PACKAGES);
+			if (getActivity() == null)
+				return null;
 
-			final PackageManager pm = getActivity().getPackageManager();
-			List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+            Context context = getActivity();
 
-			for (ApplicationInfo packageInfo : packages) {
-				boolean isSystemApp = ((packageInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
-				if (isSystemApp == showSystemApps )
+            tryMigratingCheckboxList();
+
+            if (getActivity() == null)
+                return null;
+
+            final PackageManager pm = context.getPackageManager();
+			List<PackageInfo> packages = pm.getInstalledPackages(0);
+
+			for (PackageInfo packageInfo : packages) {
+				try
 				{
-					AppInfoStorage storage = new AppInfoStorage();
+                    if (packageInfo.packageName.equals(PebbleNotificationCenter.PACKAGE))
+                        continue;
 
-					storage.info = packageInfo;
-					storage.icon = pm.getApplicationIcon(packageInfo);
-					storage.label = pm.getApplicationLabel(packageInfo);
+					ApplicationInfo appInfo = pm.getApplicationInfo(packageInfo.packageName, 0);
 
-					apps.add(storage);
-					//android.R.drawable.sym_def_app_icon
+					boolean isSystemApp = ((appInfo.flags & ApplicationInfo.FLAG_SYSTEM) != 0);
+					if (isSystemApp == showSystemApps )
+					{
+						AppInfoStorage storage = new AppInfoStorage();
+
+						storage.packageName = appInfo.packageName;
+						storage.label = pm.getApplicationLabel(appInfo);
+
+						apps.add(storage);
+					}
 				}
+				catch (NameNotFoundException e)
+				{
+					continue;
+				}
+				
 			}
 
 			Collections.sort(apps, new AppInfoComparator());
+
+            apps.addAll(0, getVirtualApps(context));
 
 			return null;
 		}
@@ -222,15 +287,82 @@ public class AppListFragment extends Fragment {
 			showList();
 		}
 	}
-
-	private static class AppInfoStorage
+	
+	private class IconLoadingTask extends AsyncTask<Object, Void, IconData>
 	{
-		ApplicationInfo info;
-		CharSequence label;
-		Drawable icon;
+
+		@Override
+		protected void onPostExecute(IconData result) {
+			if (result != null && result.holder.lastIndex == result.position)
+				result.holder.icon.setImageBitmap(iconCache.get(result.pkg));
+		}
+
+		@Override
+		protected IconData doInBackground(Object... params) {
+			if (getActivity() == null)
+                return null;
+
+            final PackageManager pm = getActivity().getPackageManager();
+			
+			try {
+				Drawable icon = pm.getApplicationIcon((String) params[0]);
+				if (!(icon instanceof BitmapDrawable))
+					icon = getResources().getDrawable(android.R.drawable.sym_def_app_icon);
+				
+				iconCache.put((String) params[0], ((BitmapDrawable) icon).getBitmap());					
+			} catch (NameNotFoundException e) {
+			}
+			
+			return new IconData((String) params[0], (ViewHolder) params[1], (Integer) params[2]);
+		}
 	}
 
-	private static class AppInfoComparator implements Comparator<AppInfoStorage>
+    public static List<AppInfoStorage> getVirtualApps(Context context)
+    {
+        List<AppInfoStorage> virtualApps = new ArrayList<AppInfoStorage>(3);
+        if (context == null)
+            return virtualApps;
+
+
+        AppInfoStorage app = new AppInfoStorage();
+        app.label = context.getString(R.string.virtualAppDefaultSettings);
+        app.packageName = AppSetting.VIRTUAL_APP_DEFAULT_SETTINGS;
+        virtualApps.add(app);
+
+        app = new AppInfoStorage();
+        app.label = context.getString(R.string.virtualAppThirdParty);
+        app.packageName = AppSetting.VIRTUAL_APP_THIRD_PARTY;
+        virtualApps.add(app);
+
+        app = new AppInfoStorage();
+        app.label = context.getString(R.string.virtualAppTaskerReceiver);
+        app.packageName = AppSetting.VIRTUAL_APP_TASKER_RECEIVER;
+        virtualApps.add(app);
+
+        return virtualApps;
+    }
+
+    public static class IconData
+	{
+		String pkg;
+		ViewHolder holder;
+		int position;
+		
+		public IconData(String pkg, ViewHolder holder, int position)
+		{
+			this.pkg = pkg;
+			this.holder = holder;
+			this.position = position;
+		}
+	}
+
+	public static class AppInfoStorage
+	{
+		public String packageName;
+		public CharSequence label;
+	}
+
+    public static class AppInfoComparator implements Comparator<AppInfoStorage>
 	{
 
 		@Override
@@ -242,8 +374,30 @@ public class AppListFragment extends Fragment {
 
 	private static class ViewHolder
 	{
+		int lastIndex;
 		ImageView icon;
 		TextView name;
 		CheckBox check;
 	}
+
+    private void tryMigratingCheckboxList()
+    {
+        if (!preferences.contains(PebbleNotificationCenter.SELECTED_PACKAGES))
+            return;
+
+        List<String> list = new ArrayList<String>();
+        PreferencesUtil.loadCollection(preferences, list, PebbleNotificationCenter.SELECTED_PACKAGES);
+        for (String pkg : list)
+            settingsStorage.setAppChecked(pkg, true);
+
+        String[] spammyPackageList = preferences.getAll().keySet().toArray(new String[0]);
+        for (String s : spammyPackageList)
+        {
+            if (s.startsWith(PebbleNotificationCenter.SELECTED_PACKAGES))
+            {
+                editor.remove(s);
+            }
+        }
+
+    }
 }

@@ -1,17 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.matejdro.pebblenotificationcenter"
-    android:versionCode="14"
-    android:versionName="2.0" >
+    android:versionCode="36"
+    android:versionName="2.3b11" >
 
     <uses-sdk
-        android:minSdkVersion="9"
-        android:targetSdkVersion="19" />
+        android:minSdkVersion="14"
+        android:targetSdkVersion="20" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="net.dinglisch.android.tasker.PERMISSION_RUN_TASKS" />
+
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/icon"
@@ -36,18 +40,26 @@
             <meta-data
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_config" />
-
+ 
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
         </service>
         <service android:name="com.matejdro.pebblenotificationcenter.PebbleTalkerService" >
         </service>
+        <service android:name="com.matejdro.pebblenotificationcenter.notifications.SideChannelNotificationListener" >
+            <intent-filter>
+                <action android:name="android.support.BIND_NOTIFICATION_SIDE_CHANNEL" />
+            </intent-filter>
+        </service>
 
         <receiver android:name="com.matejdro.pebblenotificationcenter.DataReceiver"
             android:exported="true" >
             <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.getpebble.action.PEBBLE_CONNECTED" />
             </intent-filter>
         </receiver>
 
@@ -73,14 +85,19 @@
         <activity android:name=".ui.LicenseActivity" >
         </activity>
 
-        <activity
-            android:name="com.matejdro.pebblenotificationcenter.tasker.TaskerSetupActivity"
-            android:label="@string/title_activity_main"
-            android:exported="true" >
+        <activity android:name=".ui.perapp.PerAppActivity" />
+
+        <activity android:name=".tasker.TaskerActionPickerActivity"
+                  android:label="@string/title_activity_main"
+                  android:exported="true">
             <intent-filter>
                 <action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING" />
             </intent-filter>
         </activity>
+        <activity android:name=".tasker.TaskerNotificationActivity" />
+        <activity android:name=".tasker.TaskerGlobalSettingsActivity"/>
+        <activity android:name=".tasker.TaskerAppListActivity"/>
+        <activity android:name=".tasker.TaskerAppSettingsActivity"/>
 
         <receiver android:name=".tasker.TaskerReceiver"
             android:exported="true" >
@@ -88,6 +105,8 @@
                   <action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING" />
               </intent-filter>
         </receiver>
+
+        <meta-data android:name="com.crashlytics.ApiKey" android:value="048e0255b748bd3c0abc33c75a2601ff67b550c8"/>
     </application>
 
 </manifest>

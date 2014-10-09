@@ -1,11 +1,13 @@
 package com.matejdro.pebblenotificationcenter.notifications;
 
 import android.annotation.TargetApi;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
-import android.util.Log;
+import com.matejdro.pebblenotificationcenter.PebbleTalkerService;
+import timber.log.Timber;
 
 @TargetApi(value = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class JellybeanNotificationListener extends NotificationListenerService {
@@ -15,23 +17,31 @@ public class JellybeanNotificationListener extends NotificationListenerService {
 	@Override
 	public void onDestroy() {
 		NotificationHandler.active = false;
-		
-		instance = null;
+
+        Timber.d("Notification Listener stopped...");
+
+        instance = null;
 	}
 
 	@Override
 	public void onCreate() {
+        Timber.d("Creating Notification Listener...");
+
 		handler = new Handler();
 		instance = this;
-		
+
 		NotificationHandler.active = true;
-		
-		super.onCreate();
+
+        Timber.d("Finished creating Notification Listener...");
+
+
+
+        super.onCreate();
 	}
 
 	@Override
 	public void onNotificationPosted(final StatusBarNotification sbn) {
-		handler.post(new Runnable() {
+        handler.post(new Runnable() {
 
 			@Override
 			public void run() {
@@ -42,14 +52,19 @@ public class JellybeanNotificationListener extends NotificationListenerService {
 
 	@Override
 	public void onNotificationRemoved(StatusBarNotification sbn) {
-		NotificationHandler.notificationDismissedOnPhone(this, sbn.getPackageName(), sbn.getTag(), sbn.getId());
+        Intent intent = new Intent(this, PebbleTalkerService.class);
+        intent.putExtra("dismissUpwardsId", sbn.getId());
+        intent.putExtra("pkg", sbn.getPackageName());
+        intent.putExtra("tag", sbn.getTag());
+        startService(intent);
 	}
 
 	public static void dismissNotification(String pkg, String tag, int id)
 	{
-		Log.d("PebbleNotifier", "dismissing");
+        Timber.d("dismissing " + pkg + " " + tag + " " + id + " " + (instance != null));
 
-		instance.cancelNotification(pkg, tag, id);
+        if (instance != null)
+		    instance.cancelNotification(pkg, tag, id);
 	}
 
 	public static StatusBarNotification[] getCurrentNotifications()

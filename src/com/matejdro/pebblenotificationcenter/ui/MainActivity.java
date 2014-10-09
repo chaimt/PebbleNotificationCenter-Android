@@ -1,8 +1,7 @@
 package com.matejdro.pebblenotificationcenter.ui;
 
-
+import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,20 +11,22 @@ import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import android.widget.Toast;
+import com.matejdro.pebblenotificationcenter.NotificationHistoryStorage;
 import com.matejdro.pebblenotificationcenter.R;
 import com.matejdro.pebblenotificationcenter.notifications.NotificationHandler;
-import com.matejdro.pebblenotificationcenter.util.WatchappHandler;
+import com.matejdro.pebblenotificationcenter.util.ConfigBackup;
+import com.matejdro.pebblenotificationcenter.pebble.WatchappHandler;
 
-public class MainActivity extends ActionBarActivity /*implements ActionBar.TabListener*/ {
+
+public class MainActivity extends FragmentActivity /*implements ActionBar.TabListener*/ {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide fragments for each of the
@@ -40,6 +41,7 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         // Create the adapter that will return a fragment for each of the three primary sections
@@ -47,7 +49,7 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
         mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the action bar.
-        final ActionBar actionBar = getSupportActionBar();
+        final ActionBar actionBar = getActionBar();
 
         // Specify that the Home/Up button should not be enabled, since there is no hierarchical
         // parent.
@@ -85,23 +87,32 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
 			Intent intent = new Intent(this, SettingsActivity.class);
 			startActivity(intent);
 			return true;
-		case R.id.action_installapp:
-			WatchappHandler.install(MainActivity.this, PreferenceManager.getDefaultSharedPreferences(this).edit());
-			return true;
 		case R.id.action_test_notification:
 			NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-			Notification notification = new Notification(R.drawable.icon, "Hello World", System.currentTimeMillis());
-			notification.defaults = Notification.DEFAULT_ALL;
 			NotificationCompat.Builder mBuilder =
-              new NotificationCompat.Builder(this).setSmallIcon(R.drawable.ic_action_pebble)
+              new NotificationCompat.Builder(this).setSmallIcon(R.drawable.icon)
                   .setContentTitle("Test Notification").setContentText("See notifcation on pebble")
-                  .setSubText("Hello World")
-                  .setDefaults(Notification.DEFAULT_VIBRATE | Notification.DEFAULT_LIGHTS);
+                  .setSubText("Hello World");
           mNotificationManager.notify((int) System.currentTimeMillis(), mBuilder.build());
-          return true;
+            break;
+            case R.id.clearHistory:
+                clearHistory();
+                break;
+            case R.id.openInPebbleApp:
+                WatchappHandler.openPebbleApp(this, PreferenceManager.getDefaultSharedPreferences(this).edit());
+                break;
+            case R.id.backupConfig:
+                backupConfig();
+                break;
+            case R.id.restoreConfig:
+                restoreConfig();
+                break;
+
+            default:
+                return false;
 		}
 
-		return false;
+		return true;
 	}
 
     private void checkServiceRunning()
@@ -152,19 +163,91 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
     private void checkWatchFaceInstalled()
     {
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!WatchappHandler.isLatest(settings))
+        if (!WatchappHandler.isFirstRun(settings))
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            builder.setMessage("Do you want to install the latest watchapp?").setNegativeButton(
-                    "No", null).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    WatchappHandler.install(MainActivity.this, settings.edit());
-                }
-            }).show();
+            WatchappHandler.displayNotification(this, settings.edit());
         }
+    }
+
+    private void clearHistory()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(R.string.deleteHistoryConfirm).setTitle(R.string.clearHistory);
+
+        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                dialogInterface.dismiss();
+            }
+        });
+
+        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                new NotificationHistoryStorage(MainActivity.this).clearDatabase();
+                dialogInterface.dismiss();
+                Toast.makeText(MainActivity.this, R.string.historyCleared, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void backupConfig()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(R.string.backupDialogText).setTitle(R.string.backupDialogTitle);
+
+        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                dialogInterface.dismiss();
+            }
+        });
+
+        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                ConfigBackup.backup(MainActivity.this);
+                Toast.makeText(MainActivity.this, R.string.backupCompleted, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.show();
+    }
+
+    private void restoreConfig()
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this).setMessage(R.string.restoreConfigDialogText).setTitle(R.string.restoreConfigDialogTitle);
+
+        builder.setNegativeButton(R.string.no, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                dialogInterface.dismiss();
+            }
+        });
+
+        builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i)
+            {
+                if (ConfigBackup.restore(MainActivity.this))
+                    Toast.makeText(MainActivity.this, R.string.configRestoreOK, Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(MainActivity.this, R.string.configRestoreError, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.show();
     }
 
     /**
@@ -176,12 +259,14 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
         public static final int PAGE_DEFAULT = 0;
         public static final int PAGE_APPS = 1;
         public static final int PAGE_APPS_SYSTEM = 2;
-        public static final int PAGE_TEXT_REPLACEMENT = 3;
+        public static final int PAGE_APPS_PEBBLE = 3;
+        public static final int PAGE_TEXT_REPLACEMENT = 4;
 
         public static final String[] TITLES = {
                 "General",
                 "User Apps",
                 "System Apps",
+                "Pebble Apps",
                 "Character Replacement"
         };
 
@@ -201,6 +286,9 @@ public class MainActivity extends ActionBarActivity /*implements ActionBar.TabLi
 
                 case PAGE_APPS_SYSTEM:
                     return AppListFragment.newInstance(true);
+
+                case PAGE_APPS_PEBBLE:
+                    return new PebbleAppListFragment();
 
                 case PAGE_TEXT_REPLACEMENT:
                     return new ReplacerFragment();

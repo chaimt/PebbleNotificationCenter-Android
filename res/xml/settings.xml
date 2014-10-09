@@ -1,21 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <Preference
+            android:title="Most settings are now per-app"
+            android:summary="This menu is now left with only several global settings. Most other settings were moved to per-app settings which means you can set different options for every app. You can get to them by clicking on app name in app list (where you check/uncheck apps) or you can edit default settings, which you can find at the top of the app list."/>
 
-    <PreferenceCategory android:title="Notification filtering" >
-        <CheckBoxPreference
-            android:key="enableOngoing"
-            android:summary="Send notifications that are not just one time event, but something ongoing (for example ongoing file download or app instalation)"
-            android:title="Send ongoing notifications" />
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:key="enableCustom"
-            android:summary="Send notifications from 3rd party apps"
-            android:title="Enable custom notifications" />
-        <CheckBoxPreference
-            android:key="sendBlank"
-            android:summary="Send notifications without text and title"
-            android:title="Send blank notifications" />
-    </PreferenceCategory>
     <PreferenceCategory android:title="New notification popup" >
         <CheckBoxPreference
             android:key="noNotifications"
@@ -48,39 +36,20 @@
 
     </PreferenceCategory>
     <PreferenceCategory android:title="Watchapp" >
-        <CheckBoxPreference
-            android:key="autoSwitch"
-            android:summary="Automatically switch to most recent notification instead of just queing it"
-            android:title="Switch to most recent notification" />
-
-        <EditTextPreference
-            android:defaultValue="20"
-            android:key="vibratePeriodicallyPeriod"
-            android:summary="After first vibrate, Pebble will also vibrate every X seconds to remind you there are notifications waiting. You can press any button on watch to stop this. Enter 0 to disable."
-            android:title="Periodic vibration period "/>
         <EditTextPreference
             android:defaultValue="0"
             android:key="watchappTimeout"
             android:summary="After this amount of seconds being idle, watchapp will close automaticaly. You can press any button on watch to stop this timer. Enter 0 to disable."
             android:title="Auto-Close timeout"/>
-
-        <ListPreference
-            android:defaultValue="1"
-            android:entries="@array/vibrationModes"
-            android:entryValues="@array/vibrationModeValues"
-            android:key="vibrateMode"
-            android:title="Vibrate mode" />
-
-        <CheckBoxPreference
-            android:defaultValue="true"
-            android:enabled="@bool/supportsNotificationCenter"
-            android:key="syncDismissUp"
-            android:summary="When checked, all notifications dismissed on phone will also be automatically dismissed on Pebble."
-            android:title="Dismiss upwards" />
+        <EditTextPreference
+                android:defaultValue="0"
+                android:key="periodicVibrationTimeout"
+                android:summary="After this amount of seconds being idle, watchapp will stop vibrating periodically. Enter 0 to vibrate indefinitely. Has no effect if periodic vibration is turned off (in per-app settings)."
+                android:title="Periodic vibration timeout"/>
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="closeToLastClosed"
-            android:summary="You need to enable Developer Connection inside Pebble app to get this to work."
+            android:key="closeToLastApp"
+            android:summary="You need to ENABLE DEVELOPER CONNECTION inside Pebble app to get this to work. It is also a bit buggy (sometimes app won't close), use on your own risk."
             android:title="Close to previously running app" />
 
         <ListPreference
@@ -107,7 +76,8 @@
             android:title="Light screen on notification"
             android:summary="Turn on display light when notification arrives"
             android:entries="@array/lightNotifications"
-            android:entryValues="@array/lightNotificationValues" />
+            android:entryValues="@array/lightNotificationValues"
+            android:defaultValue="2" />
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="noVibrateCharge"
@@ -119,8 +89,17 @@
             android:entryValues="@array/shakeActionValues"
             android:key="shakeAction"
             android:title="Action on shake" />
+
+        <CheckBoxPreference
+                android:defaultValue="false"
+                android:key="invertColors"
+                android:title="Invert colors" />
+
     </PreferenceCategory>
     <PreferenceCategory android:title="About" >
+        <Preference 
+            android:key="version"
+            android:title="Installed version"/>
         <Preference
             android:key="notifierLicense"
             android:title="Open source Licenses" />
